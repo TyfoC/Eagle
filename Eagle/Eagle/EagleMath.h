@@ -11,6 +11,7 @@ namespace Eagle {
 		static constexpr double PiQuarter = 4 / Pi;
 		static constexpr double OneRadian = Pi / 180.0;
 		static constexpr double OneDegree = 180.0 / Pi;
+		static constexpr unsigned int IEEE754x86Quake3FloatRepresentation = 0x5f3759df;		//	Better for precise: 
 
 		template <typename T> static inline void Swap(T& first, T& second) {
 			T tmp = first;
@@ -28,10 +29,7 @@ namespace Eagle {
 				int		IntPart[2];
 			} tmp = { };
 
-			unsigned char* destBuff = (unsigned char*)&tmp;
-			unsigned char* srcBuff = (unsigned char*)&value;
-			for (unsigned int i = 0; i < sizeof(tmp.DoublePart); i++) destBuff[i] = srcBuff[i];
-
+			tmp.DoublePart = value;
 			tmp.IntPart[1] = (int)(power * (int)((unsigned long long)tmp.IntPart[1] - 0x3fef127f) + 0x3fef127f);
 			tmp.IntPart[0] = 0;
 			return tmp.DoublePart;
@@ -42,6 +40,7 @@ namespace Eagle {
 				double		DoublePart;
 				long long	LongLongPart;
 			} tmp;
+
 			tmp.DoublePart = value + 6755399441055744.0;
 			tmp.LongLongPart <<= 13;
 			tmp.LongLongPart >>= 13;
@@ -61,7 +60,7 @@ namespace Eagle {
 			return (double)Double2Int(value * factor) / factor;
 		}
 
-		static inline double Ceil(double value) {														//	naive way
+		static inline double Ceil(double value) {
 			long long lvalue = (long long)value;
 			return (double)(value == (double)lvalue ? lvalue : (value >= 0.0 ? lvalue + 1.0 : lvalue));
 		}
@@ -70,7 +69,7 @@ namespace Eagle {
 			if (value >= 0.0 && value < 0.4) return 0.0;
 
 			double n = 1;
-			double valueCopy = value < 0 ? -value : value;
+			double valueCopy = value < 0 ? 0 - value : value;
 			unsigned int zeros = 0;
 
 			for (n = 1; valueCopy > n * 10; n *= 10, ++zeros);
@@ -92,21 +91,47 @@ namespace Eagle {
 			return first - second * Floor(first / second);
 		}
 
-		static inline float Sqrt(float value) {							//	only for 32-bit signed value
-			unsigned int i = *(unsigned int*)&value;
-			i += 127 << 23;
-			i >>= 1;
-			return *(float*)&i;
+		static inline float InverseSqrt32(float value) {
+			union {
+				float	FloatPart;
+				int		IntPart;
+			} tmp;
+
+			tmp.FloatPart = value;
+			tmp.IntPart = 0x5f1ffff9 - (tmp.IntPart >> 1);
+			tmp.FloatPart *= 0.703952253f * (2.38924456f - value * tmp.FloatPart * tmp.FloatPart);
+
+			return tmp.FloatPart;
+		}
+
+		static inline double InverseSqrt64(double value) {
+			union {
+				double		DoublePart;
+				long long	LongLongPart;
+			} tmp;
+
+			tmp.DoublePart = value;
+			tmp.LongLongPart = 0x5fe6eb50c7b537a9 - (tmp.LongLongPart >> 1);
+			tmp.DoublePart *= (1.5 - (0.5 * value * tmp.DoublePart * tmp.DoublePart));
+
+			return tmp.DoublePart;
+		}
+
+		static inline double InverseSqrt(double value, bool betterPrecise = true) {
+			return betterPrecise ? InverseSqrt64(value) : InverseSqrt32((float)value);
+		}
+
+		static inline double Sqrt(double value, bool betterPrecise = true) {
+			return Power(InverseSqrt(value, betterPrecise), -1);
 		}
 
 		static inline double Cosine(double radians, double precise = 0.000001) {
-			double t = 1.0, result = 1.0;
+			double t = 1.0, result = 1.0, radiansSquare = radians * radians;
 			int p = 0;
-			double radiansSquare = radians * radians;
 
 			while (Absolute(t / result) > precise) {
 				p += 1;
-				t = (-t * radiansSquare) / ((2 * p - 1) * (2 * p));
+				t = ((0 - t) * radiansSquare) / ((2 * p - 1) * (2 * p));
 				result += t;
 			}
 
@@ -116,7 +141,7 @@ namespace Eagle {
 		static inline double Sine(double radians) {
 			double cosResult = Cosine(radians);
 			double result = (double)Sqrt((float)(1 - cosResult * cosResult));
-			return radians > 0.0 ? result : -result;
+			return radians > 0.0 ? result : 0 - result;
 		}
 
 		static inline double Tangent(double radians) {
