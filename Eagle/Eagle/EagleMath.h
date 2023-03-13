@@ -11,7 +11,6 @@ namespace Eagle {
 		static constexpr double PiQuarter = 4 / Pi;
 		static constexpr double OneRadian = Pi / 180.0;
 		static constexpr double OneDegree = 180.0 / Pi;
-		static constexpr unsigned int IEEE754x86Quake3FloatRepresentation = 0x5f3759df;		//	Better for precise: 
 
 		template <typename T> static inline void Swap(T& first, T& second) {
 			T tmp = first;
