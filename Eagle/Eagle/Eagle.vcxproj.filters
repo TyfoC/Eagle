@@ -7,5 +7,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EagleGraphics.cpp" />
+    <ClCompile Include="EagleMath.cpp" />
   </ItemGroup>
 </Project>

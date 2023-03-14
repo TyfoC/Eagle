@@ -7,7 +7,7 @@
 #include <Windows.h>
 
 namespace Eagle {
-	class OSWindowsRenderer : public Graphics::Canvas {
+	class OSWindowsRenderer : public Canvas {
 	public:
 		OSWindowsRenderer() : Canvas() {
 			m_destinationBuffer = 0;
@@ -24,7 +24,7 @@ namespace Eagle {
 			m_destinationBuffer = 0;
 			m_width = rect.right - rect.left;
 			m_height = rect.bottom - rect.top;
-			m_colors = new Graphics::Color[m_width * m_height];
+			m_colors = new Color[m_width * m_height];
 			if (!m_colors) {
 				m_width = m_height = 0;
 				m_deviceContext = 0;
@@ -86,7 +86,7 @@ namespace Eagle {
 			BitBlt(m_bitmapContext, 0, 0, (int)m_width, (int)m_height, m_deviceContext, 0, 0, SRCCOPY);
 			
 			unsigned int length = m_width * m_height;
-			for (unsigned int i = 0; i < length; i++) m_colors[i] = Graphics::Color(m_destinationBuffer[i].rgbRed, m_destinationBuffer[i].rgbGreen, m_destinationBuffer[i].rgbBlue);
+			for (unsigned int i = 0; i < length; i++) m_colors[i] = Color(m_destinationBuffer[i].rgbRed, m_destinationBuffer[i].rgbGreen, m_destinationBuffer[i].rgbBlue);
 
 			return true;
 		}

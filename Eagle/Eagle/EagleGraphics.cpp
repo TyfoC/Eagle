@@ -1,23 +1,23 @@
 #include "EagleGraphics.h"
 
-Eagle::Graphics::Color::Color() {
+Eagle::Color::Color() {
 	m_value = 0;
 }
 
-Eagle::Graphics::Color::Color(unsigned char red, unsigned char green, unsigned char blue) {
+Eagle::Color::Color(unsigned char red, unsigned char green, unsigned char blue) {
 	m_value = (unsigned int)(0xff000000 | (red << 16) | (green << 8) | blue);
 }
 
-Eagle::Graphics::Color::Color(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
+Eagle::Color::Color(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
 	m_value = (unsigned int)((alpha << 24) | (red << 16) | (green << 8) | blue);
 }
 
-Eagle::Graphics::Color::Color(unsigned char red, unsigned char green, unsigned char blue, float alpha) {
+Eagle::Color::Color(unsigned char red, unsigned char green, unsigned char blue, float alpha) {
 	unsigned char alphaByte = (unsigned char)((unsigned int)(alpha * 255) & 0xff);
 	m_value = (unsigned int)((alphaByte << 24) | (red << 16) | (green << 8) | blue);
 }
 
-Eagle::Graphics::Color& Eagle::Graphics::Color::Blend(const Color& color) {
+Eagle::Color& Eagle::Color::Blend(const Color& color) {
 	unsigned int alpha = color.GetAlpha() + 1;
 	unsigned int invertedAlpha = 256 - alpha;
 	unsigned char red = (unsigned char)((alpha * color.GetRed() + invertedAlpha * GetRed()) >> 8);
@@ -27,80 +27,80 @@ Eagle::Graphics::Color& Eagle::Graphics::Color::Blend(const Color& color) {
 	return *this;
 }
 
-void Eagle::Graphics::Color::SetRed(unsigned char red) {
+void Eagle::Color::SetRed(unsigned char red) {
 	m_value &= 0xff00ffff;
 	m_value |= (unsigned int)(red << 16);
 }
 
-void Eagle::Graphics::Color::SetGreen(unsigned char green) {
+void Eagle::Color::SetGreen(unsigned char green) {
 	m_value &= 0xffff00ff;
 	m_value |= (unsigned int)(green << 8);
 }
 
-void Eagle::Graphics::Color::SetBlue(unsigned char blue) {
+void Eagle::Color::SetBlue(unsigned char blue) {
 	m_value &= 0xffffff00;
 	m_value |= (unsigned int)blue;
 }
 
-void Eagle::Graphics::Color::SetAlpha(unsigned char alpha) {
+void Eagle::Color::SetAlpha(unsigned char alpha) {
 	m_value &= 0x00ffffff;
 	m_value |= (unsigned int)(alpha << 24);
 }
 
-unsigned char Eagle::Graphics::Color::GetRed() const {
+unsigned char Eagle::Color::GetRed() const {
 	return (unsigned char)((m_value & 0x00ff0000) >> 16);
 }
 
-unsigned char Eagle::Graphics::Color::GetGreen() const {
+unsigned char Eagle::Color::GetGreen() const {
 	return (unsigned char)((m_value & 0x0000ff00) >> 8);
 }
 
-unsigned char Eagle::Graphics::Color::GetBlue() const {
+unsigned char Eagle::Color::GetBlue() const {
 	return (unsigned char)(m_value & 0x000000ff);
 }
 
-unsigned char Eagle::Graphics::Color::GetAlpha() const {
+unsigned char Eagle::Color::GetAlpha() const {
 	return (unsigned char)((m_value & 0xff000000) >> 24);
 }
 
-Eagle::Graphics::Color& Eagle::Graphics::Color::operator()() {
+Eagle::Color& Eagle::Color::operator()() {
 	m_value = 0;
 	return *this;
 }
 
-Eagle::Graphics::Color& Eagle::Graphics::Color::operator()(unsigned char red, unsigned char green, unsigned char blue) {
+Eagle::Color& Eagle::Color::operator()(unsigned char red, unsigned char green, unsigned char blue) {
 	m_value = (unsigned int)((red << 16) | (green << 8) | blue);
 	return *this;
 }
 
-Eagle::Graphics::Color& Eagle::Graphics::Color::operator()(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
+Eagle::Color& Eagle::Color::operator()(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha) {
 	m_value = (unsigned int)((alpha << 24) | (red << 16) | (green << 8) | blue);
 	return *this;
 }
 
-Eagle::Graphics::Color& Eagle::Graphics::Color::operator()(unsigned char red, unsigned char green, unsigned char blue, float alpha) {
+Eagle::Color& Eagle::Color::operator()(unsigned char red, unsigned char green, unsigned char blue, float alpha) {
 	unsigned char alphaByte = (unsigned char)((unsigned int)(alpha * 255) & 0xff);
 	m_value = (unsigned int)((alphaByte << 24) | (red << 16) | (green << 8) | blue);
 	return *this;
 }
 
-Eagle::Graphics::Color::operator unsigned int() const {
+Eagle::Color::operator unsigned int() const {
 	return m_value;
 }
 
-Eagle::Graphics::Canvas::Canvas() {
+Eagle::Canvas::Canvas() {
 	m_colors = 0;
 	m_width = m_height = 0;
 }
 
-Eagle::Graphics::Canvas::Canvas(unsigned int width, unsigned int height) {
+Eagle::Canvas::Canvas(unsigned int width, unsigned int height) {
 	unsigned int length = width * height;
 	m_colors = new Color[length];
 	if (m_colors) m_width = width, m_height = height;
 	else m_width = m_height = 0;
 }
 
-Eagle::Graphics::Canvas::Canvas(const Canvas& canvas) {
+Eagle::Canvas::Canvas(const Canvas& canvas) {
 	unsigned int length = canvas.m_width * canvas.m_height;
 	m_colors = new Color[length];
 	if (m_colors) {
@@ -110,14 +110,29 @@ Eagle::Graphics::Canvas::Canvas(const Canvas& canvas) {
 	else m_width = m_height = 0;
 }
 
-Eagle::Graphics::Canvas::~Canvas() {
+Eagle::Canvas::~Canvas() {
 	if (m_colors) {
 		delete[] m_colors;
 		m_width = m_height = 0;
 	}
 }
 
-bool Eagle::Graphics::Canvas::Truncate(unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
+bool Eagle::Canvas::Copy(const Canvas& canvas, unsigned int sourceX, unsigned int sourceY, unsigned int destinationX, unsigned int destinationY, unsigned int width, unsigned int height) {
+	if (!m_colors) return false;
+	if (sourceX >= m_width || sourceY >= m_height) return false;
+	if (m_width < sourceX + width) width = m_width - sourceX + 1;
+	if (m_height < sourceY + height) height = m_height - sourceY + 1;
+
+	unsigned int sourceOffset = sourceX + sourceY * width, destinationOffset = destinationX + destinationY * m_width;
+	for (unsigned int y = 0; y < height; y++) {
+		for (unsigned int x = 0; x < width; x++) m_colors[destinationOffset + x] = canvas.m_colors[sourceOffset + x];
+		destinationOffset += m_width;
+		sourceOffset += canvas.m_width;
+	}
+	return true;
+}
+
+bool Eagle::Canvas::Truncate(unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
 	unsigned int truncatedLength = width * height;
 	Color* truncatedColors = new Color[truncatedLength];
 	if (!truncatedColors) return false;
@@ -134,42 +149,42 @@ bool Eagle::Graphics::Canvas::Truncate(unsigned int x, unsigned int y, unsigned 
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawPointI(const Color& color, const IPoint2D point) {
+bool Eagle::Canvas::DrawPointI(const Color& color, const IPoint2D point) {
 	if (!m_colors) return false;
-	m_colors[point.X + point.Y * m_width] = color;
+	m_colors[point.X + point.Y * m_width] = m_colors[point.X + point.Y * m_width].Blend(color);
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawPointF(const Color& color, const FPoint2D point) {
+bool Eagle::Canvas::DrawPointF(const Color& color, const FPoint2D point) {
 	if (!m_colors) return false;
-	int x = (int)Math::Double2Int(point.X), y = (int)Math::Double2Int(point.Y);
-	m_colors[x + y * m_width] = color;
+	int x = (int)Double2Int(point.X), y = (int)Double2Int(point.Y);
+	m_colors[x + y * m_width] = m_colors[x + y * m_width].Blend(color);
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawRectangleI(const Color& color, const IPoint2D point1, const IPoint2D point2) {
+bool Eagle::Canvas::DrawRectangleI(const Color& color, const IPoint2D point1, const IPoint2D point2) {
 	if (!m_colors) return false;
 	int x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
-	if (x1 > x2) Math::Swap(x1, x2);
-	if (y1 > y2) Math::Swap(y1, y2);
+	if (x1 > x2) Swap(x1, x2);
+	if (y1 > y2) Swap(y1, y2);
 	for (int y = y1; y < y2; y++) for (int x = x1; x < x2; x++) DrawPointI(color, { x, y });
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawRectangleF(const Color& color, const FPoint2D point1, const FPoint2D point2) {
+bool Eagle::Canvas::DrawRectangleF(const Color& color, const FPoint2D point1, const FPoint2D point2) {
 	if (!m_colors) return false;
-	int x1 = (int)Math::Double2Int(point1.X), y1 = (int)Math::Double2Int(point1.Y), x2 = (int)Math::Double2Int(point2.X), y2 = (int)Math::Double2Int(point2.Y);
-	if (x1 > x2) Math::Swap(x1, x2);
-	if (y1 > y2) Math::Swap(y1, y2);
+	int x1 = (int)Double2Int(point1.X), y1 = (int)Double2Int(point1.Y), x2 = (int)Double2Int(point2.X), y2 = (int)Double2Int(point2.Y);
+	if (x1 > x2) Swap(x1, x2);
+	if (y1 > y2) Swap(y1, y2);
 	for (int y = y1; y < y2; y++) for (int x = x1; x < x2; x++) DrawPointI(color, { x, y });
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawLineI(const Color& color, const IPoint2D point1, const IPoint2D point2) {
+bool Eagle::Canvas::DrawLineI(const Color& color, const IPoint2D point1, const IPoint2D point2) {
 	if (!m_colors) return false;
 
 	int x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
-	const int distanceX = Math::Absolute(x2 - x1), distanceY = Math::Absolute(y2 - y1);
+	const int distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
 	const int signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
 
 	DrawPointI(color, { x2, y2 });
@@ -192,11 +207,11 @@ bool Eagle::Graphics::Canvas::DrawLineI(const Color& color, const IPoint2D point
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawLineF(const Color& color, const FPoint2D point1, const FPoint2D point2) {
+bool Eagle::Canvas::DrawLineF(const Color& color, const FPoint2D point1, const FPoint2D point2) {
 	if (!m_colors) return false;
 
-	int x1 = (int)Math::Double2Int(point1.X), y1 = (int)Math::Double2Int(point1.Y), x2 = (int)Math::Double2Int(point2.X), y2 = (int)Math::Double2Int(point2.Y);
-	const int distanceX = Math::Absolute(x2 - x1), distanceY = Math::Absolute(y2 - y1);
+	int x1 = (int)Double2Int(point1.X), y1 = (int)Double2Int(point1.Y), x2 = (int)Double2Int(point2.X), y2 = (int)Double2Int(point2.Y);
+	const int distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
 	const int signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
 
 	DrawPointI(color, { x2, y2 });
@@ -219,69 +234,59 @@ bool Eagle::Graphics::Canvas::DrawLineF(const Color& color, const FPoint2D point
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawCircleI(const Color& color, const IPoint2D center, int radius) {
+//	Warning: it is not recommended to change the color alpha parameter (this function does not provide the ability to draw shaded areas nicely)
+bool Eagle::Canvas::DrawCircleI(const Color& color, const IPoint2D center, int radius) {
 	if (!m_colors) return false;
 
-	int x = center.X, y = center.Y, offsetX = 0, offsetY = radius, f = 1 - radius;
+	int x = center.X, y = center.Y, currentX = radius, currentY = 0, offsetError = 0;
 
-	DrawLineI(color, { x, y }, { x + radius, y });
-	DrawLineI(color, { x, y }, { x - radius, y });
-	DrawLineI(color, { x, y }, { x, y + radius });
-	DrawLineI(color, { x, y }, { x, y - radius });
+	while (currentX >= currentY) {
+		DrawLineI(color, { x - currentX, y + currentY }, { x + currentX, y + currentY });
+		DrawLineI(color, { x - currentX, y - currentY }, { x + currentX, y - currentY });
+		DrawLineI(color, { x - currentY, y + currentX }, { x + currentY, y + currentX });
+		DrawLineI(color, { x - currentY, y - currentX }, { x + currentY, y - currentX });
 
-	while (offsetX < offsetY) {
-		offsetX += 1;
-		if (f < 0) f += 2 * offsetX + 1;
-		else {
-			f += 2 * (offsetX - offsetY + 1);
-			offsetY -= 1;
+		if (offsetError <= 0) {
+			currentY += 1;
+			offsetError += 2 * currentY + 1;
 		}
 
-		DrawLineI(color, { x + offsetX, y + offsetX }, { x + offsetX, y + offsetY });
-		DrawLineI(color, { x - offsetX, y + offsetX }, { x - offsetX, y + offsetY });
-		DrawLineI(color, { x + offsetX, y - offsetX }, { x + offsetX, y - offsetY });
-		DrawLineI(color, { x - offsetX, y - offsetX }, { x - offsetX, y - offsetY });
-		DrawLineI(color, { x + offsetX, y + offsetX }, { x + offsetY, y + offsetX });
-		DrawLineI(color, { x + offsetX, y + offsetX }, { x - offsetY, y + offsetX });
-		DrawLineI(color, { x + offsetX, y - offsetX }, { x + offsetY, y - offsetX });
-		DrawLineI(color, { x + offsetX, y - offsetX }, { x - offsetY, y - offsetX });
+		if (offsetError > 0) {
+			currentX -= 1;
+			offsetError -= 2 * currentX + 1;
+		}
 	}
 
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawCircleF(const Color& color, const FPoint2D center, float radius) {
+//	Warning: it is not recommended to change the color alpha parameter (this function does not provide the ability to draw shaded areas nicely)
+bool Eagle::Canvas::DrawCircleF(const Color& color, const FPoint2D center, float radius) {
 	if (!m_colors) return false;
 
-	int x = (int)Math::Double2Int(center.X), y = (int)Math::Double2Int(center.Y), offsetX = 0, offsetY = (int)Math::Double2Int(radius), f = (int)Math::Double2Int(1.0f - radius);
+	int x = (int)Double2Int(center.X), y = (int)Double2Int(center.Y), currentX = (int)Double2Int(radius), currentY = 0, offsetError = 0;
 
-	DrawLineI(color, { x, y }, { x + offsetY, y });
-	DrawLineI(color, { x, y }, { x - offsetY, y });
-	DrawLineI(color, { x, y }, { x, y + offsetY });
-	DrawLineI(color, { x, y }, { x, y - offsetY });
+	while (currentX >= currentY) {
+		DrawLineI(color, { x - currentX, y + currentY }, { x + currentX, y + currentY });
+		DrawLineI(color, { x - currentX, y - currentY }, { x + currentX, y - currentY });
+		DrawLineI(color, { x - currentY, y + currentX }, { x + currentY, y + currentX });
+		DrawLineI(color, { x - currentY, y - currentX }, { x + currentY, y - currentX });
 
-	while (offsetX < offsetY) {
-		offsetX += 1;
-		if (f < 0) f += 2 * offsetX + 1;
-		else {
-			f += 2 * (offsetX - offsetY + 1);
-			offsetY -= 1;
+		if (offsetError <= 0) {
+			currentY += 1;
+			offsetError += 2 * currentY + 1;
 		}
 
-		DrawLineI(color, { x + offsetX, y + offsetX }, { x + offsetX, y + offsetY });
-		DrawLineI(color, { x - offsetX, y + offsetX }, { x - offsetX, y + offsetY });
-		DrawLineI(color, { x + offsetX, y - offsetX }, { x + offsetX, y - offsetY });
-		DrawLineI(color, { x - offsetX, y - offsetX }, { x - offsetX, y - offsetY });
-		DrawLineI(color, { x + offsetX, y + offsetX }, { x + offsetY, y + offsetX });
-		DrawLineI(color, { x + offsetX, y + offsetX }, { x - offsetY, y + offsetX });
-		DrawLineI(color, { x + offsetX, y - offsetX }, { x + offsetY, y - offsetX });
-		DrawLineI(color, { x + offsetX, y - offsetX }, { x - offsetY, y - offsetX });
+		if (offsetError > 0) {
+			currentX -= 1;
+			offsetError -= 2 * currentX + 1;
+		}
 	}
 
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawPolygonI(const Color& color, const IPoint2D* vertices, unsigned int count) {
+bool Eagle::Canvas::DrawPolygonI(const Color& color, const IPoint2D* vertices, unsigned int count) {
 	if (!m_colors) return false;
 	else if (count < 3) return count == 2 ? DrawLineI(color, vertices[0], vertices[1]) : false;
 
@@ -311,14 +316,14 @@ bool Eagle::Graphics::Canvas::DrawPolygonI(const Color& color, const IPoint2D* v
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::DrawPolygonF(const Color& color, const FPoint2D* vertices, unsigned int count) {
+bool Eagle::Canvas::DrawPolygonF(const Color& color, const FPoint2D* vertices, unsigned int count) {
 	if (!m_colors) return false;
 	else if (count < 3) return count == 2 ? DrawLineF(color, vertices[0], vertices[1]) : false;
 
-	int minX = (int)Math::Double2Int(vertices[0].X), minY = (int)Math::Double2Int(vertices[0].Y);
+	int minX = (int)Double2Int(vertices[0].X), minY = (int)Double2Int(vertices[0].Y);
 	int maxX = minX, maxY = minY, tmpX, tmpY;
 	for (size_t i = 1; i < count; i++) {
-		tmpX = (int)Math::Double2Int(vertices[i].X), tmpY = (int)Math::Double2Int(vertices[i].Y);
+		tmpX = (int)Double2Int(vertices[i].X), tmpY = (int)Double2Int(vertices[i].Y);
 
 		if (tmpX < minX) minX = tmpX;
 		if (tmpX > maxX) maxX = tmpX;
@@ -341,7 +346,7 @@ bool Eagle::Graphics::Canvas::DrawPolygonF(const Color& color, const FPoint2D* v
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::IsPointInPolygonI(const IPoint2D point, const IPoint2D* vertices, unsigned int count) {
+bool Eagle::Canvas::IsPointInPolygonI(const IPoint2D point, const IPoint2D* vertices, unsigned int count) {
 	int x = point.X, y = point.Y, slope, firstX, firstY, lastX, lastY;
 
 	bool pointInPolygon = false;
@@ -363,14 +368,14 @@ bool Eagle::Graphics::Canvas::IsPointInPolygonI(const IPoint2D point, const IPoi
 	return pointInPolygon;
 }
 
-bool Eagle::Graphics::Canvas::IsPointInPolygonF(const FPoint2D point, const FPoint2D* vertices, unsigned int count) {
-	int x = (int)Math::Double2Int(point.X), y = (int)Math::Double2Int(point.Y), slope, firstX, firstY, lastX, lastY;
+bool Eagle::Canvas::IsPointInPolygonF(const FPoint2D point, const FPoint2D* vertices, unsigned int count) {
+	int x = (int)Double2Int(point.X), y = (int)Double2Int(point.Y), slope, firstX, firstY, lastX, lastY;
 
 	bool pointInPolygon = false;
 	unsigned int j = count - 1;
 	for (unsigned int i = 0; i < count; i++) {
-		firstX = (int)Math::Double2Int(vertices[i].X), firstY = (int)Math::Double2Int(vertices[i].Y);
-		lastX = (int)Math::Double2Int(vertices[j].X), lastY = (int)Math::Double2Int(vertices[j].Y);
+		firstX = (int)Double2Int(vertices[i].X), firstY = (int)Double2Int(vertices[i].Y);
+		lastX = (int)Double2Int(vertices[j].X), lastY = (int)Double2Int(vertices[j].Y);
 
 		if (x == firstX && y == firstY) return true;
 		else if ((firstY > y) != (lastY > y)) {
@@ -385,35 +390,39 @@ bool Eagle::Graphics::Canvas::IsPointInPolygonF(const FPoint2D point, const FPoi
 	return pointInPolygon;
 }
 
-const Eagle::Graphics::Color* Eagle::Graphics::Canvas::GetColorsArray() const {
+const Eagle::Color* Eagle::Canvas::GetColorsArray() const {
 	return m_colors;
 }
 
-unsigned int Eagle::Graphics::Canvas::GetWidth() const {
+unsigned int Eagle::Canvas::GetWidth() const {
 	return m_width;
 }
 
-unsigned int Eagle::Graphics::Canvas::GetHeight() const {
+unsigned int Eagle::Canvas::GetHeight() const {
 	return m_height;
 }
 
-bool Eagle::Graphics::Canvas::Update(float alpha) {
+bool Eagle::Canvas::Update(float alpha) {
 	if (!m_colors) return false;
 	// Content is different for each OS
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::Render(float alpha) {
+bool Eagle::Canvas::Render(float alpha) {
 	if (!m_colors) return false;
 	// Content is different for each OS
 	return true;
 }
 
-bool Eagle::Graphics::Canvas::IsWindowSizeChanged() const {
+bool Eagle::Canvas::IsWindowSizeChanged() const {
 	// Content is different for each OS
 	return false;
 }
 
-const Eagle::Graphics::Color& Eagle::Graphics::Canvas::operator[](unsigned int index) const {
+Eagle::Color& Eagle::Canvas::operator[](unsigned int index) {
+	return m_colors[index];
+}
+
+const Eagle::Color& Eagle::Canvas::operator[](unsigned int index) const {
 	return m_colors[index];
 }
