@@ -2,120 +2,21 @@
 #ifndef EAGLE_MATH_H
 #define EAGLE_MATH_H
 
+#include "EagleDefinitions.h"
+
+/*
+	Signle-precision floating-point format:
+		[----------][Sign|exponent|fraction]
+		[Bits count][ 1  |   8    |   23   ]
+		value = ((-1) ^ sign) * (2 ^ (exponent - 127)) * 1.(Bit[22] | ... | Bit[1] | Bit[0])
+
+	Double-precision floating-point format:
+		[----------][Sign|exponent|fraction]
+		[Bits count][ 1  |   11   |   52   ]
+		value = ((-1) ^ sign) * (2 ^ (exponent - 1023)) * 1.(Bit[51] | ... | Bit[1] | Bit[0])
+*/
+
 namespace Eagle {
-	static constexpr double Pi = 3.14159265358979323846;
-	static constexpr double OneRadian = Pi / 180.0;
-	static constexpr double OneDegree = 180.0 / Pi;
-
-	typedef struct IVector2D {
-		IVector2D();
-		IVector2D(int x, int y);
-
-		IVector2D operator+(const int& value) const;
-		IVector2D operator-(const int& value) const;
-		IVector2D operator*(const int& value) const;
-		IVector2D operator/(const int& value) const;
-		IVector2D operator%(const int& value) const;
-		IVector2D& operator+=(const int& value);
-		IVector2D& operator-=(const int& value);
-		IVector2D& operator*=(const int& value);
-		IVector2D& operator/=(const int& value);
-		IVector2D& operator%=(const int& value);
-		IVector2D operator+(const IVector2D& value) const;
-		IVector2D operator-(const IVector2D& value) const;
-		IVector2D operator*(const IVector2D& value) const;
-		IVector2D operator/(const IVector2D& value) const;
-		IVector2D operator%(const IVector2D& value) const;
-		IVector2D& operator+=(const IVector2D& value);
-		IVector2D& operator-=(const IVector2D& value);
-		IVector2D& operator*=(const IVector2D& value);
-		IVector2D& operator/=(const IVector2D& value);
-		IVector2D& operator%=(const IVector2D& value);
-
-		int X;
-		int Y;
-	} IVector2D, IPoint2D;
-
-	typedef struct FVector2D {
-		FVector2D();
-		FVector2D(float x, float y);
-
-		inline FVector2D operator+(const float& value) const;
-		inline FVector2D operator-(const float& value) const;
-		inline FVector2D operator*(const float& value) const;
-		inline FVector2D operator/(const float& value) const;
-		inline FVector2D operator%(const float& value) const;
-		inline FVector2D& operator+=(const float& value);
-		inline FVector2D& operator-=(const float& value);
-		inline FVector2D& operator*=(const float& value);
-		inline FVector2D& operator/=(const float& value);
-		inline FVector2D& operator%=(const float& value);
-		inline FVector2D operator+(const FVector2D& value) const;
-		inline FVector2D operator-(const FVector2D& value) const;
-		inline FVector2D operator*(const FVector2D& value) const;
-		inline FVector2D operator/(const FVector2D& value) const;
-		inline FVector2D operator%(const FVector2D& value) const;
-		inline FVector2D& operator+=(const FVector2D& value);
-		inline FVector2D& operator-=(const FVector2D& value);
-		inline FVector2D& operator*=(const FVector2D& value);
-		inline FVector2D& operator/=(const FVector2D& value);
-		inline FVector2D& operator%=(const FVector2D& value);
-
-		float X;
-		float Y;
-	} FVector2D, FPoint2D;
-
-	class Matrix {
-	public:
-		Matrix();
-		Matrix(unsigned int width, unsigned int height);
-		Matrix(unsigned int width, unsigned int height, const double* data);
-		Matrix(const Matrix& matrix);
-
-		template <unsigned int N> Matrix(unsigned int width, unsigned int height, const double(&values)) {
-			Matrix matrixCopy(width, height, values);
-			Copy(matrixCopy);
-		}
-
-		~Matrix();
-
-		bool Resize(unsigned int width, unsigned int height);
-		bool Copy(const Matrix& matrix);
-		bool Fill(unsigned int row, unsigned int column, const double* values, unsigned int count);
-		Matrix Identity();
-
-		unsigned int GetWidth() const;
-		unsigned int GetHeight() const;
-		unsigned int GetLength() const;
-
-		double& operator()(int row, int column);
-		const double& operator()(int row, int column) const;
-		double& operator[](unsigned int index);
-		const double& operator[](unsigned int index) const;
-		Matrix operator+(const double& value) const;
-		Matrix operator-(const double& value) const;
-		Matrix operator*(const double& value) const;
-		Matrix operator/(const double& value) const;
-		Matrix operator%(const double& value) const;
-		Matrix& operator+=(const double& value);
-		Matrix& operator-=(const double& value);
-		Matrix& operator*=(const double& value);
-		Matrix& operator/=(const double& value);
-		Matrix& operator%=(const double& value);
-		Matrix operator+(const Matrix& matrix) const;
-		Matrix operator-(const Matrix& matrix) const;
-		Matrix operator*(const Matrix& matrix) const;
-		Matrix& operator+=(const Matrix& matrix);
-		Matrix& operator-=(const Matrix& matrix);
-		Matrix& operator*=(const Matrix& matrix);
-		Matrix& operator=(const Matrix& matrix);
-	protected:
-		double* m_values;
-		unsigned int m_width;
-		unsigned int m_height;
-		unsigned int m_length;
-	};
-
 	template <typename T> static inline void Swap(T& first, T& second) {
 		T tmp = first;
 		first = second;
@@ -138,13 +39,14 @@ namespace Eagle {
 		return tmp.DoublePart;
 	}
 
+	//	converting the exponent and clearing the sign, exponent, and last fraction bits
 	static inline long long Double2Int(double value) {
 		union {
 			double		DoublePart;
 			long long	LongLongPart;
-		} tmp;
+		} tmp = { };
 
-		tmp.DoublePart = value + 6755399441055744.0;
+		tmp.DoublePart = value + 6755399441055744.0;		//	exponent[0] and fraction[51] bits
 		tmp.LongLongPart <<= 13;
 		tmp.LongLongPart >>= 13;
 		return tmp.LongLongPart;
@@ -194,11 +96,18 @@ namespace Eagle {
 		return first - second * Floor(first / second);
 	}
 
+	static inline double Factorial(int value) {
+		double result = 1;
+		for (; value >= 1; value--) result = value * result;
+		return result;
+	}
+
+	//	optimized Quake 3 algorithm
 	static inline float InverseSqrt32(float value) {
 		union {
 			float	FloatPart;
 			int		IntPart;
-		} tmp;
+		} tmp = {};
 
 		tmp.FloatPart = value;
 		tmp.IntPart = 0x5f1ffff9 - (tmp.IntPart >> 1);
@@ -207,11 +116,12 @@ namespace Eagle {
 		return tmp.FloatPart;
 	}
 
+	//	Quake 3 algorithm for x64
 	static inline double InverseSqrt64(double value) {
 		union {
 			double		DoublePart;
 			long long	LongLongPart;
-		} tmp;
+		} tmp = {};
 
 		tmp.DoublePart = value;
 		tmp.LongLongPart = 0x5fe6eb50c7b537a9 - (tmp.LongLongPart >> 1);
@@ -220,31 +130,43 @@ namespace Eagle {
 		return tmp.DoublePart;
 	}
 
-	static inline double InverseSqrt(double value, bool betterPrecise = true) {
-		return betterPrecise ? InverseSqrt64(value) : InverseSqrt32((float)value);
+	static inline double InverseSqrt(double value, bool betterPrecision = true) {
+		return betterPrecision ? InverseSqrt64(value) : InverseSqrt32((float)value);
 	}
 
 	static inline double Sqrt(double value, bool betterPrecise = true) {
 		return Power(InverseSqrt(value, betterPrecise), -1);
 	}
 
-	static inline double Cosine(double radians, double precise = 0.000001) {
+	//	Taylor series
+	static inline double Cosine(double radians, double precision = SineCosinePrecision) {
+		if (radians >= PiTwo || radians <= 0 - PiTwo) radians = Mod(radians, PiTwo);
 		double t = 1.0, result = 1.0, radiansSquare = radians * radians;
-		int p = 0;
+		long long p = 0;
 
-		while (Absolute(t / result) > precise) {
+		while (Absolute(t / result) > precision) {
 			p += 1;
-			t = ((0 - t) * radiansSquare) / ((2 * p - 1) * (2 * p));
+			t = ((0.0 - t) * radiansSquare) / (double)((2 * p - 1) * (2 * p));
 			result += t;
 		}
 
 		return result;
 	}
 
-	static inline double Sine(double radians) {
-		double cosResult = Cosine(radians);
-		double result = (double)Sqrt((float)(1 - cosResult * cosResult));
-		return radians > 0.0 ? result : 0 - result;
+	//	sin(x) = cos(x - Pi / 2)
+	static inline double Sine(double radians, double precision = SineCosinePrecision) {
+		if (radians >= PiTwo || radians <= 0 - PiTwo) radians = Mod(radians, PiTwo);
+		return Cosine(radians - PiHalf, precision);
+	}
+
+	//	sin(x) = cos(x - Pi / 2)
+	static inline double SineFromCosine(double radians, double precision = SineCosinePrecision) {
+		return Cosine(radians - PiHalf, precision);
+	}
+
+	//	cos(x) = sin(Pi / 2 - x)
+	static inline double CosineFromSine(double radians, double precision = SineCosinePrecision) {
+		return Sine(PiHalf - radians, precision);
 	}
 
 	static inline double Tangent(double radians) {

@@ -12,7 +12,7 @@ Eagle::Color::Color(unsigned char red, unsigned char green, unsigned char blue, 
 	m_value = (unsigned int)((alpha << 24) | (red << 16) | (green << 8) | blue);
 }
 
-Eagle::Color::Color(unsigned char red, unsigned char green, unsigned char blue, float alpha) {
+Eagle::Color::Color(unsigned char red, unsigned char green, unsigned char blue, double alpha) {
 	unsigned char alphaByte = (unsigned char)((unsigned int)(alpha * 255) & 0xff);
 	m_value = (unsigned int)((alphaByte << 24) | (red << 16) | (green << 8) | blue);
 }
@@ -78,7 +78,7 @@ Eagle::Color& Eagle::Color::operator()(unsigned char red, unsigned char green, u
 	return *this;
 }
 
-Eagle::Color& Eagle::Color::operator()(unsigned char red, unsigned char green, unsigned char blue, float alpha) {
+Eagle::Color& Eagle::Color::operator()(unsigned char red, unsigned char green, unsigned char blue, double alpha) {
 	unsigned char alphaByte = (unsigned char)((unsigned int)(alpha * 255) & 0xff);
 	m_value = (unsigned int)((alphaByte << 24) | (red << 16) | (green << 8) | blue);
 	return *this;
@@ -117,6 +117,11 @@ Eagle::Canvas::~Canvas() {
 	}
 }
 
+void Eagle::Canvas::Redraw(const Color color) {
+	unsigned int length = m_width * m_height;
+	for (unsigned int i = 0; i < length; i++) m_colors[i] = color;
+}
+
 bool Eagle::Canvas::Copy(const Canvas& canvas, unsigned int sourceX, unsigned int sourceY, unsigned int destinationX, unsigned int destinationY, unsigned int width, unsigned int height) {
 	if (!m_colors) return false;
 	if (sourceX >= m_width || sourceY >= m_height) return false;
@@ -149,84 +154,42 @@ bool Eagle::Canvas::Truncate(unsigned int x, unsigned int y, unsigned int width,
 	return true;
 }
 
-bool Eagle::Canvas::DrawPointI(const Color& color, const IPoint2D point) {
-	if (!m_colors) return false;
-	m_colors[point.X + point.Y * m_width] = m_colors[point.X + point.Y * m_width].Blend(color);
-	return true;
-}
-
-bool Eagle::Canvas::DrawPointF(const Color& color, const FPoint2D point) {
-	if (!m_colors) return false;
+bool Eagle::Canvas::DrawPoint(const Color& color, const Point point) {
 	int x = (int)Double2Int(point.X), y = (int)Double2Int(point.Y);
+	if (!m_colors || (unsigned int)x >= m_width || (unsigned int)y >= m_height) return false;
 	m_colors[x + y * m_width] = m_colors[x + y * m_width].Blend(color);
 	return true;
 }
 
-bool Eagle::Canvas::DrawRectangleI(const Color& color, const IPoint2D point1, const IPoint2D point2) {
+bool Eagle::Canvas::DrawRectangle(const Color& color, const Point point1, const Point point2) {
 	if (!m_colors) return false;
-	int x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
+	double x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
 	if (x1 > x2) Swap(x1, x2);
 	if (y1 > y2) Swap(y1, y2);
-	for (int y = y1; y < y2; y++) for (int x = x1; x < x2; x++) DrawPointI(color, { x, y });
+	for (double y = y1; y < y2; y++) for (double x = x1; x < x2; x++) DrawPoint(color, { x, y });
 	return true;
 }
 
-bool Eagle::Canvas::DrawRectangleF(const Color& color, const FPoint2D point1, const FPoint2D point2) {
-	if (!m_colors) return false;
-	int x1 = (int)Double2Int(point1.X), y1 = (int)Double2Int(point1.Y), x2 = (int)Double2Int(point2.X), y2 = (int)Double2Int(point2.Y);
-	if (x1 > x2) Swap(x1, x2);
-	if (y1 > y2) Swap(y1, y2);
-	for (int y = y1; y < y2; y++) for (int x = x1; x < x2; x++) DrawPointI(color, { x, y });
-	return true;
-}
-
-bool Eagle::Canvas::DrawLineI(const Color& color, const IPoint2D point1, const IPoint2D point2) {
+bool Eagle::Canvas::DrawLine(const Color& color, const Point point1, const Point point2) {
 	if (!m_colors) return false;
 
-	int x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
-	const int distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
-	const int signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
+	double x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
+	const double distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
+	const double signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
 
-	DrawPointI(color, { x2, y2 });
+	DrawPoint(color, { x2, y2 });
 
-	int differenceXY = distanceX - distanceY, tmp;
+	double deltaXY = distanceX - distanceY, tmp;
 	while (x1 != x2 || y1 != y2) {
-		DrawPointI(color, { x1, y1 });
+		DrawPoint(color, { x1, y1 });
 
-		tmp = differenceXY << 1;
+		tmp = deltaXY * 2;
 		if (tmp > -distanceY) {
-			differenceXY -= distanceY;
+			deltaXY -= distanceY;
 			x1 += signX;
 		}
 		if (tmp < distanceX) {
-			differenceXY += distanceX;
-			y1 += signY;
-		}
-	}
-
-	return true;
-}
-
-bool Eagle::Canvas::DrawLineF(const Color& color, const FPoint2D point1, const FPoint2D point2) {
-	if (!m_colors) return false;
-
-	int x1 = (int)Double2Int(point1.X), y1 = (int)Double2Int(point1.Y), x2 = (int)Double2Int(point2.X), y2 = (int)Double2Int(point2.Y);
-	const int distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
-	const int signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
-
-	DrawPointI(color, { x2, y2 });
-
-	int differenceXY = distanceX - distanceY, tmp;
-	while (x1 != x2 || y1 != y2) {
-		DrawPointI(color, { x1, y1 });
-
-		tmp = differenceXY << 1;
-		if (tmp > -distanceY) {
-			differenceXY -= distanceY;
-			x1 += signX;
-		}
-		if (tmp < distanceX) {
-			differenceXY += distanceX;
+			deltaXY += distanceX;
 			y1 += signY;
 		}
 	}
@@ -235,16 +198,16 @@ bool Eagle::Canvas::DrawLineF(const Color& color, const FPoint2D point1, const F
 }
 
 //	Warning: it is not recommended to change the color alpha parameter (this function does not provide the ability to draw shaded areas nicely)
-bool Eagle::Canvas::DrawCircleI(const Color& color, const IPoint2D center, int radius) {
+bool Eagle::Canvas::DrawCircle(const Color& color, const Point center, double radius) {
 	if (!m_colors) return false;
 
-	int x = center.X, y = center.Y, currentX = radius, currentY = 0, offsetError = 0;
+	double x = center.X, y = center.Y, currentX = radius, currentY = 0, offsetError = 0;
 
 	while (currentX >= currentY) {
-		DrawLineI(color, { x - currentX, y + currentY }, { x + currentX, y + currentY });
-		DrawLineI(color, { x - currentX, y - currentY }, { x + currentX, y - currentY });
-		DrawLineI(color, { x - currentY, y + currentX }, { x + currentY, y + currentX });
-		DrawLineI(color, { x - currentY, y - currentX }, { x + currentY, y - currentX });
+		DrawLine(color, { x - currentX, y + currentY }, { x + currentX, y + currentY });
+		DrawLine(color, { x - currentX, y - currentY }, { x + currentX, y - currentY });
+		DrawLine(color, { x - currentY, y + currentX }, { x + currentY, y + currentX });
+		DrawLine(color, { x - currentY, y - currentX }, { x + currentY, y - currentX });
 
 		if (offsetError <= 0) {
 			currentY += 1;
@@ -260,41 +223,15 @@ bool Eagle::Canvas::DrawCircleI(const Color& color, const IPoint2D center, int r
 	return true;
 }
 
-//	Warning: it is not recommended to change the color alpha parameter (this function does not provide the ability to draw shaded areas nicely)
-bool Eagle::Canvas::DrawCircleF(const Color& color, const FPoint2D center, float radius) {
+bool Eagle::Canvas::DrawPolygon(const Color& color, const Point* vertices, unsigned int count) {
 	if (!m_colors) return false;
+	else if (count < 3) return count == 2 ? DrawLine(color, vertices[0], vertices[1]) : false;
 
-	int x = (int)Double2Int(center.X), y = (int)Double2Int(center.Y), currentX = (int)Double2Int(radius), currentY = 0, offsetError = 0;
+	double minX = vertices[0].X, minY = vertices[0].Y;
+	double maxX = minX, maxY = minY, tmpX, tmpY;
+	for (unsigned int i = 1; i < count; i++) {
+		tmpX = vertices[i].X, tmpY = vertices[i].Y;
 
-	while (currentX >= currentY) {
-		DrawLineI(color, { x - currentX, y + currentY }, { x + currentX, y + currentY });
-		DrawLineI(color, { x - currentX, y - currentY }, { x + currentX, y - currentY });
-		DrawLineI(color, { x - currentY, y + currentX }, { x + currentY, y + currentX });
-		DrawLineI(color, { x - currentY, y - currentX }, { x + currentY, y - currentX });
-
-		if (offsetError <= 0) {
-			currentY += 1;
-			offsetError += 2 * currentY + 1;
-		}
-
-		if (offsetError > 0) {
-			currentX -= 1;
-			offsetError -= 2 * currentX + 1;
-		}
-	}
-
-	return true;
-}
-
-bool Eagle::Canvas::DrawPolygonI(const Color& color, const IPoint2D* vertices, unsigned int count) {
-	if (!m_colors) return false;
-	else if (count < 3) return count == 2 ? DrawLineI(color, vertices[0], vertices[1]) : false;
-
-	int minX = vertices[0].X, minY = vertices[0].Y;
-	int maxX = minX, maxY = minY, tmpX, tmpY;
-	for (size_t i = 1; i < count; i++) {
-		tmpX = vertices[i].X;
-		tmpY = vertices[i].Y;
 		if (tmpX < minX) minX = tmpX;
 		if (tmpX > maxX) maxX = tmpX;
 
@@ -302,9 +239,9 @@ bool Eagle::Canvas::DrawPolygonI(const Color& color, const IPoint2D* vertices, u
 		if (tmpY > maxY) maxY = tmpY;
 	}
 
-	int currentX = minX;
+	double currentX = minX;
 	for (; minY <= maxY;) {
-		if (IsPointInPolygonI({ currentX, minY }, vertices, count)) DrawPointI(color, { currentX, minY });
+		if (IsPointInPolygon({ currentX, minY }, vertices, count)) DrawPoint(color, { currentX, minY });
 
 		if (currentX <= maxX) ++currentX;
 		else {
@@ -316,38 +253,8 @@ bool Eagle::Canvas::DrawPolygonI(const Color& color, const IPoint2D* vertices, u
 	return true;
 }
 
-bool Eagle::Canvas::DrawPolygonF(const Color& color, const FPoint2D* vertices, unsigned int count) {
-	if (!m_colors) return false;
-	else if (count < 3) return count == 2 ? DrawLineF(color, vertices[0], vertices[1]) : false;
-
-	int minX = (int)Double2Int(vertices[0].X), minY = (int)Double2Int(vertices[0].Y);
-	int maxX = minX, maxY = minY, tmpX, tmpY;
-	for (size_t i = 1; i < count; i++) {
-		tmpX = (int)Double2Int(vertices[i].X), tmpY = (int)Double2Int(vertices[i].Y);
-
-		if (tmpX < minX) minX = tmpX;
-		if (tmpX > maxX) maxX = tmpX;
-
-		if (tmpY < minY) minY = tmpY;
-		if (tmpY > maxY) maxY = tmpY;
-	}
-
-	int currentX = minX;
-	for (; minY <= maxY;) {
-		if (IsPointInPolygonF({ (float)currentX, (float)minY }, vertices, count)) DrawPointI(color, { currentX, minY });
-
-		if (currentX <= maxX) ++currentX;
-		else {
-			currentX = 0;
-			++minY;
-		}
-	}
-
-	return true;
-}
-
-bool Eagle::Canvas::IsPointInPolygonI(const IPoint2D point, const IPoint2D* vertices, unsigned int count) {
-	int x = point.X, y = point.Y, slope, firstX, firstY, lastX, lastY;
+bool Eagle::Canvas::IsPointInPolygon(const Point point, const Point* vertices, unsigned int count) {
+	double x = point.X, y = point.Y, slope, firstX, firstY, lastX, lastY;
 
 	bool pointInPolygon = false;
 	unsigned int j = count - 1;
@@ -368,29 +275,11 @@ bool Eagle::Canvas::IsPointInPolygonI(const IPoint2D point, const IPoint2D* vert
 	return pointInPolygon;
 }
 
-bool Eagle::Canvas::IsPointInPolygonF(const FPoint2D point, const FPoint2D* vertices, unsigned int count) {
-	int x = (int)Double2Int(point.X), y = (int)Double2Int(point.Y), slope, firstX, firstY, lastX, lastY;
-
-	bool pointInPolygon = false;
-	unsigned int j = count - 1;
-	for (unsigned int i = 0; i < count; i++) {
-		firstX = (int)Double2Int(vertices[i].X), firstY = (int)Double2Int(vertices[i].Y);
-		lastX = (int)Double2Int(vertices[j].X), lastY = (int)Double2Int(vertices[j].Y);
-
-		if (x == firstX && y == firstY) return true;
-		else if ((firstY > y) != (lastY > y)) {
-			slope = (x - firstX) * (lastY - firstY) - (lastX - firstX) * (y - firstY);
-
-			if (!slope) return true;
-			else if ((slope < 0) != (lastY < firstY)) pointInPolygon = !pointInPolygon;
-		}
-		j = i;
-	}
-
-	return pointInPolygon;
+Eagle::Color* Eagle::Canvas::GetColors() {
+	return m_colors;
 }
 
-const Eagle::Color* Eagle::Canvas::GetColorsArray() const {
+const Eagle::Color* Eagle::Canvas::GetColors() const {
 	return m_colors;
 }
 
@@ -400,23 +289,6 @@ unsigned int Eagle::Canvas::GetWidth() const {
 
 unsigned int Eagle::Canvas::GetHeight() const {
 	return m_height;
-}
-
-bool Eagle::Canvas::Update(float alpha) {
-	if (!m_colors) return false;
-	// Content is different for each OS
-	return true;
-}
-
-bool Eagle::Canvas::Render(float alpha) {
-	if (!m_colors) return false;
-	// Content is different for each OS
-	return true;
-}
-
-bool Eagle::Canvas::IsWindowSizeChanged() const {
-	// Content is different for each OS
-	return false;
 }
 
 Eagle::Color& Eagle::Canvas::operator[](unsigned int index) {

@@ -1,7 +1,8 @@
 #pragma once
 #ifndef EAGLE_GRAPHICS_H
 #define EAGLE_GRAPHICS_H
-#include "./EagleMath.h"
+
+#include "EagleTypes.h"
 
 namespace Eagle {
 	class Color {
@@ -9,7 +10,7 @@ namespace Eagle {
 		Color();
 		Color(unsigned char red, unsigned char green, unsigned char blue);
 		Color(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha);
-		Color(unsigned char red, unsigned char green, unsigned char blue, float alpha);
+		Color(unsigned char red, unsigned char green, unsigned char blue, double alpha);
 
 		Color& Blend(const Color& color);
 
@@ -26,7 +27,7 @@ namespace Eagle {
 		Color& operator()();
 		Color& operator()(unsigned char red, unsigned char green, unsigned char blue);
 		Color& operator()(unsigned char red, unsigned char green, unsigned char blue, unsigned char alpha);
-		Color& operator()(unsigned char red, unsigned char green, unsigned char blue, float alpha);
+		Color& operator()(unsigned char red, unsigned char green, unsigned char blue, double alpha);
 		operator unsigned int() const;
 	protected:
 		unsigned int m_value;
@@ -39,28 +40,20 @@ namespace Eagle {
 		Canvas(const Canvas& canvas);
 		~Canvas();
 
+		void Redraw(const Color color = Color(0, 0, 0));
 		bool Copy(const Canvas& canvas, unsigned int sourceX, unsigned int sourceY, unsigned int destinationX, unsigned int destinationY, unsigned int width, unsigned int height);
-		bool Truncate(unsigned int x, unsigned int y, unsigned int width, unsigned int height);			//	CAN BE EXTENDED IN CHILD CLASS
-		bool DrawPointI(const Color& color, const IPoint2D point);
-		bool DrawPointF(const Color& color, const FPoint2D point);
-		bool DrawRectangleI(const Color& color, const IPoint2D point1, const IPoint2D point2);
-		bool DrawRectangleF(const Color& color, const FPoint2D point1, const FPoint2D point2);
-		bool DrawLineI(const Color& color, const IPoint2D point1, const IPoint2D point2);
-		bool DrawLineF(const Color& color, const FPoint2D point1, const FPoint2D point2);
-		bool DrawCircleI(const Color& color, const IPoint2D center, int radius);
-		bool DrawCircleF(const Color& color, const FPoint2D center, float radius);
-		bool DrawPolygonI(const Color& color, const IPoint2D* vertices, unsigned int count);
-		bool DrawPolygonF(const Color& color, const FPoint2D* vertices, unsigned int count);
-		bool IsPointInPolygonI(const IPoint2D point, const IPoint2D* vertices, unsigned int count);
-		bool IsPointInPolygonF(const FPoint2D point, const FPoint2D* vertices, unsigned int count);
+		bool Truncate(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
+		bool DrawPoint(const Color& color, const Point point);
+		bool DrawRectangle(const Color& color, const Point point1, const Point point2);
+		bool DrawLine(const Color& color, const Point point1, const Point point2);
+		bool DrawCircle(const Color& color, const Point center, double radius);
+		bool DrawPolygon(const Color& color, const Point* vertices, unsigned int count);
+		bool IsPointInPolygon(const Point point, const Point* vertices, unsigned int count);
 
-		const Color* GetColorsArray() const;
+		Color* GetColors();
+		const Color* GetColors() const;
 		unsigned int GetWidth() const;
 		unsigned int GetHeight() const;
-
-		bool Update(float alpha = 1.0);																	//	MUST BE IMPLEMENTED IN CHILD CLASS
-		bool Render(float alpha = 1.0);																	//	MUST BE IMPLEMENTED IN CHILD CLASS
-		bool IsWindowSizeChanged() const;																//	MUST BE IMPLEMENTED IN CHILD CLASS
 
 		Color& operator[](unsigned int index);
 		const Color& operator[](unsigned int index) const;

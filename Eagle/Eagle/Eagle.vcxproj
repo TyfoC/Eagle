@@ -19,13 +19,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EagleDefinitions.h" />
+    <ClInclude Include="EagleEngine.h" />
+    <ClInclude Include="EagleTypes.h" />
+    <ClInclude Include="EagleWindowsRenderer.h" />
     <ClInclude Include="EagleRenderer.h" />
     <ClInclude Include="EagleGraphics.h" />
     <ClInclude Include="EagleMath.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="EagleEngine.cpp" />
     <ClCompile Include="EagleGraphics.cpp" />
-    <ClCompile Include="EagleMath.cpp" />
+    <ClCompile Include="EagleRenderer.cpp" />
+    <ClCompile Include="EagleTypes.cpp" />
+    <ClCompile Include="EagleWindowsRenderer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

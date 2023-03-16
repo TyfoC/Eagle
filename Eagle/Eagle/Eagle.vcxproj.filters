@@ -4,9 +4,16 @@
     <ClInclude Include="EagleMath.h" />
     <ClInclude Include="EagleGraphics.h" />
     <ClInclude Include="EagleRenderer.h" />
+    <ClInclude Include="EagleEngine.h" />
+    <ClInclude Include="EagleWindowsRenderer.h" />
+    <ClInclude Include="EagleTypes.h" />
+    <ClInclude Include="EagleDefinitions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EagleGraphics.cpp" />
-    <ClCompile Include="EagleMath.cpp" />
+    <ClCompile Include="EagleEngine.cpp" />
+    <ClCompile Include="EagleRenderer.cpp" />
+    <ClCompile Include="EagleWindowsRenderer.cpp" />
+    <ClCompile Include="EagleTypes.cpp" />
   </ItemGroup>
 </Project>
