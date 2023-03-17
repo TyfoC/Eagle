@@ -606,6 +606,19 @@ Eagle::Vector3D Eagle::Vector3D::operator*(const Matrix& matrix) const {
 	return { vector[0], vector[1], vector[2] };
 }
 
+Eagle::Triangle3D::Triangle3D() {}
+Eagle::Triangle3D::Triangle3D(const Vector3D first, const Vector3D second, const Vector3D third) {
+	m_vertices[0] = first, m_vertices[1] = second, m_vertices[2] = third;
+}
+
+Eagle::Vector3D& Eagle::Triangle3D::operator[](unsigned int index) {
+	return m_vertices[index];
+}
+
+const Eagle::Vector3D& Eagle::Triangle3D::operator[](unsigned int index) const {
+	return m_vertices[index];
+}
+
 Eagle::Object2D::Object2D() {
 	m_count = 0;
 	m_vertices = 0;
@@ -770,13 +783,13 @@ Eagle::Object2D Eagle::Object2D::operator*(const Matrix& matrix) const {
 
 Eagle::Object3D::Object3D() {
 	m_count = 0;
-	m_vertices = 0;
+	m_triangles = 0;
 	m_position = m_scale = m_rotation = {};
 }
 
 Eagle::Object3D::Object3D(const Object3D& object) {
-	m_vertices = new Vector3D[object.m_count];
-	if (!m_vertices) {
+	m_triangles = new Triangle3D[object.m_count];
+	if (!m_triangles) {
 		m_count = 0;
 		return;
 	}
@@ -786,14 +799,14 @@ Eagle::Object3D::Object3D(const Object3D& object) {
 	m_scale = object.m_scale;
 	m_rotation = object.m_rotation;
 
-	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] = object.m_vertices[i];
+	for (unsigned int i = 0; i < m_count; i++) m_triangles[i] = object.m_triangles[i];
 }
 
-Eagle::Object3D::Object3D(const Vector3D* vertices, unsigned int count, const Vector3D position, const Vector3D scale, const Vector3D rotation) {
-	m_vertices = new Vector3D[count];
-	if (!m_vertices) {
+Eagle::Object3D::Object3D(const Triangle3D* triangles, unsigned int count, const Vector3D position, const Vector3D scale, const Vector3D rotation) {
+	m_triangles = new Triangle3D[count];
+	if (!m_triangles) {
 		m_count = 0;
-		m_vertices = 0;
+		m_triangles = 0;
 		m_position = m_scale = m_rotation = {};
 		return;
 	}
@@ -803,11 +816,11 @@ Eagle::Object3D::Object3D(const Vector3D* vertices, unsigned int count, const Ve
 	m_scale = scale;
 	m_rotation = rotation;
 
-	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] = vertices[i];
+	for (unsigned int i = 0; i < m_count; i++) m_triangles[i] = triangles[i];
 }
 
 Eagle::Object3D::~Object3D() {
-	if (m_vertices) delete[] m_vertices;
+	if (m_triangles) delete[] m_triangles;
 	m_count = 0;
 	m_position = m_scale = m_rotation = {};
 }
@@ -838,67 +851,56 @@ Eagle::Vector3D Eagle::Object3D::GetRotation() const {
 
 Eagle::Vector3D Eagle::Object3D::GetCenter() const {
 	Vector3D center = {};
-	for (unsigned int i = 0; i < m_count; i++) center += m_vertices[i];
-	center.X /= m_count;
-	center.Y /= m_count;
-	center.Z /= m_count;
+	for (unsigned int i = 0; i < m_count; i++) for (unsigned int j = 0; j < 3; j++) center += m_triangles[i][j];
+	center.X /= m_count * 3;
+	center.Y /= m_count * 3;
+	center.Z /= m_count * 3;
 	return center;
 }
 
-Eagle::Vector3D* Eagle::Object3D::GetVectors() {
-	return m_vertices;
+Eagle::Triangle3D* Eagle::Object3D::GetTriangles() {
+	return m_triangles;
 }
 
-const Eagle::Vector3D* Eagle::Object3D::GetVectors() const {
-	return m_vertices;
+const Eagle::Triangle3D* Eagle::Object3D::GetTriangles() const {
+	return m_triangles;
 }
 
-Eagle::Point* Eagle::Object3D::ProducePoints() const {
-	Point* points = new Point[m_count];
-	return points;
-}
-
-Eagle::Vector3D* Eagle::Object3D::ProduceVectors() const {
-	Vector3D* vectors3d = new Vector3D[m_count];
-	for (unsigned int i = 0; i < m_count; i++) vectors3d[i] = m_vertices[i];
-	return vectors3d;
-}
-
-unsigned int Eagle::Object3D::GetVectorsCount() const {
+unsigned int Eagle::Object3D::GetTrianglesCount() const {
 	return m_count;
 }
 
 Eagle::Object3D& Eagle::Object3D::operator=(const Object3D& object) {
-	Vector3D* newVertices = new Vector3D[object.m_count];
-	if (!newVertices) return *this;
+	Triangle3D* newTriangles = new Triangle3D[object.m_count];
+	if (!newTriangles) return *this;
 
-	delete[] m_vertices;
-	m_vertices = newVertices;
+	delete[] m_triangles;
+	m_triangles = newTriangles;
 
 	m_count = object.m_count;
 	m_position = object.m_position;
 	m_scale = object.m_scale;
 	m_rotation = object.m_rotation;
 
-	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] = object.m_vertices[i];
+	for (unsigned int i = 0; i < m_count; i++) m_triangles[i] = object.m_triangles[i];
 	return *this;
 }
 
-Eagle::Vector3D& Eagle::Object3D::operator[](unsigned int index) {
-	return m_vertices[index];
+Eagle::Triangle3D& Eagle::Object3D::operator[](unsigned int index) {
+	return m_triangles[index];
 }
 
-const Eagle::Vector3D& Eagle::Object3D::operator[](unsigned int index) const {
-	return m_vertices[index];
+const Eagle::Triangle3D& Eagle::Object3D::operator[](unsigned int index) const {
+	return m_triangles[index];
 }
 
 Eagle::Object3D& Eagle::Object3D::operator*=(const Matrix& matrix) {
-	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] *= matrix;
+	for (unsigned int i = 0; i < m_count; i++) for (unsigned int j = 0; j < 3; j++) m_triangles[i][j] *= matrix;
 	return *this;
 }
 
 Eagle::Object3D Eagle::Object3D::operator*(const Matrix& matrix) const {
 	Object3D object(*this);
-	for (unsigned int i = 0; i < m_count; i++) object.m_vertices[i] *= matrix;
+	for (unsigned int i = 0; i < m_count; i++) for (unsigned int j = 0; j < 3; j++) object.m_triangles[i][j] *= matrix;
 	return object;
 }

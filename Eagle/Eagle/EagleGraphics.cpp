@@ -173,15 +173,15 @@ bool Eagle::Canvas::DrawRectangle(const Color& color, const Point point1, const 
 bool Eagle::Canvas::DrawLine(const Color& color, const Point point1, const Point point2) {
 	if (!m_colors) return false;
 
-	double x1 = point1.X, y1 = point1.Y, x2 = point2.X, y2 = point2.Y;
-	const double distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
-	const double signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
+	long long x1 = Double2Int(point1.X), y1 = Double2Int(point1.Y), x2 = Double2Int(point2.X), y2 = Double2Int(point2.Y);
+	const long long distanceX = Absolute(x2 - x1), distanceY = Absolute(y2 - y1);
+	const long long signX = x1 < x2 ? 1 : -1, signY = y1 < y2 ? 1 : -1;
 
-	DrawPoint(color, { x2, y2 });
+	DrawPoint(color, { (double)x2, (double)y2 });
 
-	double deltaXY = distanceX - distanceY, tmp;
+	long long deltaXY = distanceX - distanceY, tmp;
 	while (x1 != x2 || y1 != y2) {
-		DrawPoint(color, { x1, y1 });
+		DrawPoint(color, { (double)x1, (double)y1 });
 
 		tmp = deltaXY * 2;
 		if (tmp > -distanceY) {

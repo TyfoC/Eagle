@@ -87,7 +87,7 @@ namespace Eagle {
 		static Object3D TransformLocalToWorld(const Object3D& object);
 
 		Object3D ApplyTransformations(const Object3D& object);
-		bool DrawObject(const Object3D& object, const Color& color);
+		bool DrawObject(const Object3D& object, const Color& colorFaces, const Color& colorEdges, const Color& colorVertices, bool drawFaces = true, bool drawEdges = false, bool drawVertices = false);
 
 		Camera* GetCamera();
 		Matrix GetProjectionMatrix();

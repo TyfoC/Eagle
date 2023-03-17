@@ -140,6 +140,17 @@ namespace Eagle {
 		double W = 1.0;
 	};
 
+	class Triangle3D {
+	public:
+		Triangle3D();
+		Triangle3D(const Vector3D first, const Vector3D second, const Vector3D third);
+
+		Vector3D& operator[](unsigned int index);
+		const Vector3D& operator[](unsigned int index) const;
+	protected:
+		Vector3D m_vertices[3];
+	};
+
 	class Object2D {
 	public:
 		Object2D();
@@ -180,7 +191,7 @@ namespace Eagle {
 	public:
 		Object3D();
 		Object3D(const Object3D& object);
-		Object3D(const Vector3D* vertices, unsigned int count, const Vector3D position = { 0.0, 0.0, 0.0 }, const Vector3D scale = { 1.0, 1.0, 1.0 }, const Vector3D rotation = { 0.0, 0.0, 0.0 });
+		Object3D(const Triangle3D* triangles, unsigned int count, const Vector3D position = { 0.0, 0.0, 0.0 }, const Vector3D scale = { 1.0, 1.0, 1.0 }, const Vector3D rotation = { 0.0, 0.0, 0.0 });
 		~Object3D();
 
 		void SetPosition(const Vector3D position);
@@ -193,20 +204,18 @@ namespace Eagle {
 
 		Vector3D GetCenter() const;
 
-		Vector3D* GetVectors();
-		const Vector3D* GetVectors() const;
-		Point* ProducePoints() const;
-		Vector3D* ProduceVectors() const;
-		unsigned int GetVectorsCount() const;
+		Triangle3D* GetTriangles();
+		const Triangle3D* GetTriangles() const;
+		unsigned int GetTrianglesCount() const;
 
 		Object3D& operator=(const Object3D& object);
-		Vector3D& operator[](unsigned int index);
-		const Vector3D& operator[](unsigned int index) const;
+		Triangle3D& operator[](unsigned int index);
+		const Triangle3D& operator[](unsigned int index) const;
 		Object3D& operator*=(const Matrix& matrix);
 		Object3D operator*(const Matrix& matrix) const;
 	protected:
 		unsigned int m_count;
-		Vector3D* m_vertices;
+		Triangle3D* m_triangles;
 		Vector3D m_position;
 		Vector3D m_scale;
 		Vector3D m_rotation;

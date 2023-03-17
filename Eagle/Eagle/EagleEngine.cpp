@@ -301,37 +301,49 @@ Eagle::Object3D Eagle::Engine3D::TransformLocalToWorld(const Object3D& object) {
 }
 
 Eagle::Object3D Eagle::Engine3D::ApplyTransformations(const Object3D& object) {
-	const unsigned int verticesCount = object.GetVectorsCount();
+	const unsigned int trianglesCount = object.GetTrianglesCount();
+	const unsigned int verticesCount = trianglesCount * 3;
 	Point* points = new Point[verticesCount];
 	if (!points) return object;
 
 	Object3D transformedObject = TransformLocalToWorld(object);											//	local -> world
 	transformedObject *= m_camera->GetMatrix();															//	world -> camera
 	transformedObject *= m_projectionMatrix;															//	camera -> projection
-	for (unsigned int i = 0; i < verticesCount; i++) {													//	projecion -> normalized
-		transformedObject[i] /= transformedObject[i].W;
-		transformedObject[i].W = 1;
+	for (unsigned int i = 0; i < trianglesCount; i++) {													//	projecion -> normalized
+		for (unsigned int j = 0; j < 3; j++) {
+			transformedObject[i][j] /= transformedObject[i][j].W;
+			transformedObject[i][j].W = 1;
+		}
 	}
 
-	for (unsigned int i = 0; i < verticesCount; i++) {
-		if (transformedObject[i].X > 1 || transformedObject[i].Y > 1 || transformedObject[i].Z > 1 || transformedObject[i].W > 1 ||
-			transformedObject[i].X < -1 || transformedObject[i].Y < -1 || transformedObject[i].Z < -1 || transformedObject[i].W < -1) transformedObject[i] = {};
+	for (unsigned int i = 0; i < trianglesCount; i++) {
+		for (unsigned int j = 0; j < 3; j++) {
+			if (transformedObject[i][j].X > 1 || transformedObject[i][j].Y > 1 || transformedObject[i][j].Z > 1 || transformedObject[i][j].W > 1 ||
+				transformedObject[i][j].X < -1 || transformedObject[i][j].Y < -1 || transformedObject[i][j].Z < -1 || transformedObject[i][j].W < -1) transformedObject[i] = {};
+		}
 	}
-
 
 	transformedObject *= GetScreenMatrix();
 	return transformedObject;
 }
 
-bool Eagle::Engine3D::DrawObject(const Object3D& object, const Color& color) {
-	const unsigned int verticesCount = object.GetVectorsCount();
+bool Eagle::Engine3D::DrawObject(const Object3D& object, const Color& colorFaces, const Color& colorEdges, const Color& colorVertices, bool drawFaces, bool drawEdges, bool drawVertices) {
+	const unsigned int trianglesCount = object.GetTrianglesCount();
 	Object3D transformed = ApplyTransformations(object);
-	Point* points = new Point[verticesCount];
-	if (!points) return false;
-	for (unsigned int i = 0; i < verticesCount; i++) points[i] = { transformed[i].X, transformed[i].Y };
-	bool result = DrawPolygon(color, points, verticesCount);
-	delete[] points;
-	return result;
+	Point trianglePoints[3];
+
+	for (unsigned int i = 0; i < trianglesCount; i++) {
+		for (unsigned int j = 0; j < 3; j++) trianglePoints[j] = { transformed[i][j].X, transformed[i][j].Y };
+		if (drawFaces) DrawPolygon(colorFaces, trianglePoints, 3);
+		if (drawEdges) {
+			DrawLine(colorVertices, trianglePoints[0], trianglePoints[1]);
+			DrawLine(colorVertices, trianglePoints[1], trianglePoints[2]);
+			DrawLine(colorVertices, trianglePoints[2], trianglePoints[0]);
+		}
+		if (drawVertices) for (unsigned int j = 0; j < 3; j++) DrawCircle(colorVertices, trianglePoints[j], 5.0);
+	}
+
+	return true;
 }
 
 Eagle::Camera* Eagle::Engine3D::GetCamera() {
