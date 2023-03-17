@@ -47,6 +47,18 @@ Eagle::WindowsRenderer::~WindowsRenderer() {
 	}
 }
 
+unsigned int Eagle::WindowsRenderer::GetWidth() const {
+	RECT rect = {};
+	GetWindowRect(WindowFromDC(m_deviceContext), &rect);
+	return rect.right - rect.left;
+}
+
+unsigned int Eagle::WindowsRenderer::GetHeight() const {
+	RECT rect = {};
+	GetWindowRect(WindowFromDC(m_deviceContext), &rect);
+	return rect.bottom - rect.top;
+}
+
 bool Eagle::WindowsRenderer::AreMetricsChanged() {
 	RECT rect = {};
 	GetWindowRect(WindowFromDC(m_deviceContext), &rect);

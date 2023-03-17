@@ -332,27 +332,13 @@ Eagle::Matrix& Eagle::Matrix::operator=(const Matrix& matrix) {
 	return *this;
 }
 
-Eagle::Vector2D Eagle::Vector2D::operator*(const Matrix& matrix) const {
-	unsigned int matrixWidth = matrix.GetWidth(), matrixHeight = matrix.GetHeight();
-	if (3 != matrixWidth) return *this;
-
-	const double values[] = { X, Y, W };
-	Matrix vector(3, 1, values);
-	vector *= matrix;
-
-	Vector2D vec = Vector2D();
-	return { vector[0], vector[1], vector[2] };
-}
-
 Eagle::Vector2D::Vector2D() {
 	X = Y = 0;
-	W = 1.0;
 }
 
-Eagle::Vector2D::Vector2D(double x, double y, double w) {
+Eagle::Vector2D::Vector2D(double x, double y) {
 	X = x;
 	Y = y;
-	W = w;
 }
 
 Eagle::Vector2D& Eagle::Vector2D::operator+=(const double value) {
@@ -417,7 +403,6 @@ Eagle::Vector2D& Eagle::Vector2D::operator%=(const Vector2D vector) {
 
 Eagle::Vector2D& Eagle::Vector2D::operator*=(const Matrix& matrix) {
 	unsigned int matrixWidth = matrix.GetWidth(), matrixHeight = matrix.GetHeight();
-	if (3 != matrixWidth) return *this;
 
 	const double values[] = { X, Y, W };
 	Matrix vectorMatrix(3, 1, values);
@@ -428,43 +413,197 @@ Eagle::Vector2D& Eagle::Vector2D::operator*=(const Matrix& matrix) {
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator+(const double value) const {
-	return { X + value, Y + value, W };
+	return { X + value, Y + value };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator-(const double value) const {
-	return { X - value, Y - value, W };
+	return { X - value, Y - value };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator*(const double value) const {
-	return { X * value, Y * value, W };
+	return { X * value, Y * value };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator/(const double value) const {
-	return { X / value, Y / value, W };
+	return { X / value, Y / value };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator%(const double value) const {
-	return { Mod(X, value), Mod(Y, value), W };
+	return { Mod(X, value), Mod(Y, value) };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator+(const Vector2D vector) const {
-	return { X + vector.X, Y + vector.Y, W };
+	return { X + vector.X, Y + vector.Y };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator-(const Vector2D vector) const {
-	return { X - vector.X, Y - vector.Y, W };
+	return { X - vector.X, Y - vector.Y };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator*(const Vector2D vector) const {
-	return { X * vector.X, Y * vector.Y, W };
+	return { X * vector.X, Y * vector.Y };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator/(const Vector2D vector) const {
-	return { X / vector.X, Y / vector.Y, W };
+	return { X / vector.X, Y / vector.Y };
 }
 
 Eagle::Vector2D Eagle::Vector2D::operator%(const Vector2D vector) const {
-	return { Mod(X, vector.X), Mod(Y, vector.Y), W };
+	return { Mod(X, vector.X), Mod(Y, vector.Y) };
+}
+
+Eagle::Vector2D Eagle::Vector2D::operator*(const Matrix& matrix) const {
+	unsigned int matrixWidth = matrix.GetWidth(), matrixHeight = matrix.GetHeight();
+
+	const double values[] = { X, Y, W };
+	Matrix vector(3, 1, values);
+	vector *= matrix;
+
+	Vector2D result = { vector[0], vector[1] };
+	result.W = vector[2];
+	return result;
+}
+
+Eagle::Vector3D::Vector3D() {
+	X = Y = Z = 0;
+}
+
+Eagle::Vector3D::Vector3D(double x, double y, double z) {
+	X = x;
+	Y = y;
+	Z = z;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator+=(const double value) {
+	X += value;
+	Y += value;
+	Z += value;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator-=(const double value) {
+	X -= value;
+	Y -= value;
+	Z -= value;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator*=(const double value) {
+	X *= value;
+	Y *= value;
+	Z *= value;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator/=(const double value) {
+	X /= value;
+	Y /= value;
+	Z /= value;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator%=(const double value) {
+	X = Mod(X, value);
+	Y = Mod(Y, value);
+	Z = Mod(Z, value);
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator+=(const Vector3D vector) {
+	X += vector.X;
+	Y += vector.Y;
+	Z += vector.Z;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator-=(const Vector3D vector) {
+	X -= vector.X;
+	Y -= vector.Y;
+	Z -= vector.Z;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator*=(const Vector3D vector) {
+	X *= vector.X;
+	Y *= vector.Y;
+	Z *= vector.Z;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator/=(const Vector3D vector) {
+	X /= vector.X;
+	Y /= vector.Y;
+	Z /= vector.Z;
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator%=(const Vector3D vector) {
+	X = Mod(X, vector.X);
+	Y = Mod(Y, vector.Y);
+	Z = Mod(Z, vector.Z);
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Vector3D::operator*=(const Matrix& matrix) {
+	unsigned int matrixWidth = matrix.GetWidth(), matrixHeight = matrix.GetHeight();
+
+	const double values[] = { X, Y, Z, W };
+	Matrix vectorMatrix(4, 1, values);
+	vectorMatrix *= matrix;
+
+	X = vectorMatrix[0], Y = vectorMatrix[1], Z = vectorMatrix[2], W = vectorMatrix[3];
+	return *this;
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator+(const double value) const {
+	return { X + value, Y + value, Z + value };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator-(const double value) const {
+	return { X - value, Y - value, Z - value };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator*(const double value) const {
+	return { X * value, Y * value, Z * value };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator/(const double value) const {
+	return { X / value, Y / value, Z / value };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator%(const double value) const {
+	return { Mod(X, value), Mod(Y, value), Mod(Z, value) };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator+(const Vector3D vector) const {
+	return { X + vector.X, Y + vector.Y, Z + vector.Z };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator-(const Vector3D vector) const {
+	return { X - vector.X, Y - vector.Y, Z - vector.Z };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator*(const Vector3D vector) const {
+	return { X * vector.X, Y * vector.Y, Z * vector.Z };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator/(const Vector3D vector) const {
+	return { X / vector.X, Y / vector.Y, Z / vector.Z };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator%(const Vector3D vector) const {
+	return { Mod(X, vector.X), Mod(Y, vector.Y), Mod(Z, vector.Z) };
+}
+
+Eagle::Vector3D Eagle::Vector3D::operator*(const Matrix& matrix) const {
+	unsigned int matrixWidth = matrix.GetWidth(), matrixHeight = matrix.GetHeight();
+	if (3 != matrixWidth) return *this;
+
+	const double values[] = { X, Y, Z };
+	Matrix vector(3, 1, values);
+	vector *= matrix;
+
+	return { vector[0], vector[1], vector[2] };
 }
 
 Eagle::Object2D::Object2D() {
@@ -528,7 +667,6 @@ Eagle::Object2D::Object2D(const Point* points, unsigned int count, const Vector2
 	for (unsigned int i = 0; i < count; i++) {
 		m_vertices[i].X = points[i].X;
 		m_vertices[i].Y = points[i].Y;
-		m_vertices[i].W = 1.0;
 	}
 }
 
@@ -537,32 +675,6 @@ Eagle::Object2D::~Object2D() {
 	m_count = 0;
 	m_position = m_scale = {};
 	m_rotation = 0;
-}
-
-Eagle::Object2D Eagle::Object2D::ProduceTranslated() const {
-	Object2D translated(*this);
-	for (unsigned int i = 0; i < translated.m_count; i++) translated[i] += translated.m_position;
-	return translated;
-}
-
-Eagle::Object2D Eagle::Object2D::ProduceScaled() const {
-	Object2D scaled(*this);
-	for (unsigned int i = 0; i < scaled.m_count; i++) scaled.m_vertices[i] *= scaled.m_scale;
-	return scaled;
-}
-
-Eagle::Object2D Eagle::Object2D::ProduceRotated() const {
-	Object2D rotated(*this);
-	const double sineAngle = Sine(m_rotation), cosineAngle = Cosine(m_rotation);
-	for (unsigned int i = 0; i < rotated.m_count; i++) {
-		rotated.m_vertices[i].X = m_vertices[i].X * cosineAngle - m_vertices[i].Y * sineAngle;
-		rotated.m_vertices[i].Y = m_vertices[i].X * sineAngle + m_vertices[i].Y * cosineAngle;
-	}
-	return rotated;
-}
-
-Eagle::Object2D Eagle::Object2D::ProduceTransformed() const {
-	return ProduceScaled().ProduceRotated().ProduceTranslated();
 }
 
 void Eagle::Object2D::SetPosition(const Vector2D position) {
@@ -622,14 +734,11 @@ unsigned int Eagle::Object2D::GetVectorsCount() const {
 }
 
 Eagle::Object2D& Eagle::Object2D::operator=(const Object2D& object) {
-	m_vertices = new Vector2D[object.m_count];
-	if (!m_vertices) {
-		m_count = 0;
-		m_vertices = 0;
-		m_position = m_scale = {};
-		m_rotation = 0;
-		return *this;
-	}
+	Vector2D* newVertices = new Vector2D[object.m_count];
+	if (!newVertices) return *this;
+
+	delete[] m_vertices;
+	m_vertices = newVertices;
 
 	m_count = object.m_count;
 	m_position = object.m_position;
@@ -646,4 +755,150 @@ Eagle::Vector2D& Eagle::Object2D::operator[](unsigned int index) {
 
 const Eagle::Vector2D& Eagle::Object2D::operator[](unsigned int index) const {
 	return m_vertices[index];
+}
+
+Eagle::Object2D& Eagle::Object2D::operator*=(const Matrix& matrix) {
+	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] *= matrix;
+	return *this;
+}
+
+Eagle::Object2D Eagle::Object2D::operator*(const Matrix& matrix) const {
+	Object2D object(*this);
+	for (unsigned int i = 0; i < m_count; i++) object.m_vertices[i] *= matrix;
+	return object;
+}
+
+Eagle::Object3D::Object3D() {
+	m_count = 0;
+	m_vertices = 0;
+	m_position = m_scale = m_rotation = {};
+}
+
+Eagle::Object3D::Object3D(const Object3D& object) {
+	m_vertices = new Vector3D[object.m_count];
+	if (!m_vertices) {
+		m_count = 0;
+		return;
+	}
+
+	m_count = object.m_count;
+	m_position = object.m_position;
+	m_scale = object.m_scale;
+	m_rotation = object.m_rotation;
+
+	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] = object.m_vertices[i];
+}
+
+Eagle::Object3D::Object3D(const Vector3D* vertices, unsigned int count, const Vector3D position, const Vector3D scale, const Vector3D rotation) {
+	m_vertices = new Vector3D[count];
+	if (!m_vertices) {
+		m_count = 0;
+		m_vertices = 0;
+		m_position = m_scale = m_rotation = {};
+		return;
+	}
+
+	m_count = count;
+	m_position = position;
+	m_scale = scale;
+	m_rotation = rotation;
+
+	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] = vertices[i];
+}
+
+Eagle::Object3D::~Object3D() {
+	if (m_vertices) delete[] m_vertices;
+	m_count = 0;
+	m_position = m_scale = m_rotation = {};
+}
+
+void Eagle::Object3D::SetPosition(const Vector3D position) {
+	m_position = position;
+}
+
+void Eagle::Object3D::SetScale(const Vector3D scale) {
+	m_scale = scale;
+}
+
+void Eagle::Object3D::SetRotation(const Vector3D rotation) {
+	m_rotation = rotation;
+}
+
+Eagle::Vector3D Eagle::Object3D::GetPosition() const {
+	return m_position;
+}
+
+Eagle::Vector3D Eagle::Object3D::GetScale() const {
+	return m_scale;
+}
+
+Eagle::Vector3D Eagle::Object3D::GetRotation() const {
+	return m_rotation;
+}
+
+Eagle::Vector3D Eagle::Object3D::GetCenter() const {
+	Vector3D center = {};
+	for (unsigned int i = 0; i < m_count; i++) center += m_vertices[i];
+	center.X /= m_count;
+	center.Y /= m_count;
+	center.Z /= m_count;
+	return center;
+}
+
+Eagle::Vector3D* Eagle::Object3D::GetVectors() {
+	return m_vertices;
+}
+
+const Eagle::Vector3D* Eagle::Object3D::GetVectors() const {
+	return m_vertices;
+}
+
+Eagle::Point* Eagle::Object3D::ProducePoints() const {
+	Point* points = new Point[m_count];
+	return points;
+}
+
+Eagle::Vector3D* Eagle::Object3D::ProduceVectors() const {
+	Vector3D* vectors3d = new Vector3D[m_count];
+	for (unsigned int i = 0; i < m_count; i++) vectors3d[i] = m_vertices[i];
+	return vectors3d;
+}
+
+unsigned int Eagle::Object3D::GetVectorsCount() const {
+	return m_count;
+}
+
+Eagle::Object3D& Eagle::Object3D::operator=(const Object3D& object) {
+	Vector3D* newVertices = new Vector3D[object.m_count];
+	if (!newVertices) return *this;
+
+	delete[] m_vertices;
+	m_vertices = newVertices;
+
+	m_count = object.m_count;
+	m_position = object.m_position;
+	m_scale = object.m_scale;
+	m_rotation = object.m_rotation;
+
+	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] = object.m_vertices[i];
+	return *this;
+}
+
+Eagle::Vector3D& Eagle::Object3D::operator[](unsigned int index) {
+	return m_vertices[index];
+}
+
+const Eagle::Vector3D& Eagle::Object3D::operator[](unsigned int index) const {
+	return m_vertices[index];
+}
+
+Eagle::Object3D& Eagle::Object3D::operator*=(const Matrix& matrix) {
+	for (unsigned int i = 0; i < m_count; i++) m_vertices[i] *= matrix;
+	return *this;
+}
+
+Eagle::Object3D Eagle::Object3D::operator*(const Matrix& matrix) const {
+	Object3D object(*this);
+	for (unsigned int i = 0; i < m_count; i++) object.m_vertices[i] *= matrix;
+	return object;
 }

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="EagleDefinitions.h" />
     <ClInclude Include="EagleEngine.h" />
+    <ClInclude Include="EagleProjection.h" />
     <ClInclude Include="EagleTypes.h" />
     <ClInclude Include="EagleWindowsRenderer.h" />
     <ClInclude Include="EagleRenderer.h" />
@@ -30,6 +31,7 @@
   <ItemGroup>
     <ClCompile Include="EagleEngine.cpp" />
     <ClCompile Include="EagleGraphics.cpp" />
+    <ClCompile Include="EagleProjection.cpp" />
     <ClCompile Include="EagleRenderer.cpp" />
     <ClCompile Include="EagleTypes.cpp" />
     <ClCompile Include="EagleWindowsRenderer.cpp" />

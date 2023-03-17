@@ -9,6 +9,8 @@ namespace Eagle {
 		Renderer();
 		Renderer(unsigned int width, unsigned int height);
 
+		virtual unsigned int GetWidth() const = 0;
+		virtual unsigned int GetHeight() const = 0;
 		virtual bool AreMetricsChanged() = 0;
 		virtual bool Update(float alpha = 1.0f) = 0;
 		virtual bool Render(float alpha = 1.0f) = 0;

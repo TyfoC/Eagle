@@ -8,6 +8,7 @@
     <ClInclude Include="EagleWindowsRenderer.h" />
     <ClInclude Include="EagleTypes.h" />
     <ClInclude Include="EagleDefinitions.h" />
+    <ClInclude Include="EagleProjection.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EagleGraphics.cpp" />
@@ -15,5 +16,6 @@
     <ClCompile Include="EagleRenderer.cpp" />
     <ClCompile Include="EagleWindowsRenderer.cpp" />
     <ClCompile Include="EagleTypes.cpp" />
+    <ClCompile Include="EagleProjection.cpp" />
   </ItemGroup>
 </Project>

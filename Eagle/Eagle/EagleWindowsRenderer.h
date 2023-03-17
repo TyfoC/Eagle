@@ -12,6 +12,8 @@ namespace Eagle {
 		WindowsRenderer(const HDC deviceContext);
 		~WindowsRenderer();
 
+		unsigned int GetWidth() const;
+		unsigned int GetHeight() const;
 		bool AreMetricsChanged();
 		bool Update(float alpha = 1.0f);
 		bool Render(float alpha = 1.0f);
